@@ -1,1 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
 
+<meta name="viewport"
+      content="width=device-width,
+      initial-scale=1,
+      maximum-scale=1,
+      user-scalable=no">
+
+<title>AURA</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    margin: 0;
+    background: #000;
+    color: white;
+    font-family: -apple-system,
+                 BlinkMacSystemFont,
+                 "Segoe UI",
+                 sans-serif;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#app {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+/* AURA */
+
+#orb {
+    width: 220px;
+    height: 220px;
+
+    border: 3px solid #00d9ff;
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-shadow:
+        0 0 25px #00d9ff66,
+        inset 0 0 25px #00d9ff22;
+
+    transition: 0.25s;
+}
+
+#inner {
+    width: 175px;
+    height: 175px;
+
+    border: 2px solid #00d9ff88;
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#core {
+    width: 135px;
+    height: 135px;
+
+    border-radius: 50%;
+
+    background: #00d9ff12;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#logo {
+    font-size: 35px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #00d9ff;
+}
+
+/* STATUS */
+
+#status {
+    margin-top: 30px;
+
+    font-size: 16px;
+    font-weight: 700;
+
+    letter-spacing: 1px;
+}
+
+#heard {
+    margin-top: 15px;
+
+    min-height: 25px;
+
+    max-width: 330px;
+
+    padding: 0 20px;
+
+    color: #999;
+}
+
+/* MIC */
+
+#mic {
+
+    margin-top: 40px;
+
+    width: 90px;
+    height: 90px;
+
+    border-radius: 50%;
+
+    border: 2px solid #00d9ff;
+
+    background: #00d9ff20;
+
+    color: white;
+
+    font-size: 32px;
+
+    cursor: pointer;
+
+    -webkit-appearance: none;
+}
+
+#mic:active {
+    transform: scale(.92);
+}
+
+/* LISTENING */
+
+.listening #orb {
+
+    border-color: red;
+
+    box-shadow:
+        0 0 45px #ff000088,
+        inset 0 0 30px #ff000033;
+}
+
+.listening #inner {
+    border-color: red;
+}
+
+.listening #core {
+    background: #ff000022;
+}
+
+.listening #logo {
+    color: red;
+}
+
+.listening #mic {
+    border-color: red;
+    background: #ff000022;
+}
+
+/* SPEAKING */
+
+.speaking #orb {
+
+    border-color: red;
+
+    box-shadow:
+        0 0 65px red,
+        inset 0 0 35px #ff000044;
+
+    animation:
+        auraPulse .45s infinite alternate;
+}
+
+.speaking #inner {
+    border-color: red;
+}
+
+.speaking #core {
+    background: #ff000033;
+}
+
+.speaking #logo {
+    color: red;
+}
+
+.speaking #status {
+    color: red;
+}
+
+@keyframes auraPulse {
+
+    from {
+        transform: scale(1);
+    }
+
+    to {
+        transform: scale(1.08);
+    }
+
+}
+
+/* ERROR */
+
+.error {
+    color: red !important;
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div id="app">
+
+    <div id="orb">
+
+        <div id="inner">
+
+            <div id="core">
+
+                <div id="logo">
+                    AURA
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div id="status">
+        AURA SYSTEMS ONLINE
+    </div>
+
+
+    <div id="heard">
+        Tap the microphone
+    </div>
+
+
+    <button id="mic">
+        🎙️
+    </button>
+
+</div>
+
+
+<script>
+
+/* =================================
+   AURA
+   Augmented User Reality Assistant
+================================= */
+
+const app =
+    document.getElementById("app");
+
+const orb =
+    document.getElementById("orb");
+
+const status =
+    document.getElementById("status");
+
+const heard =
+    document.getElementById("heard");
+
+const mic =
+    document.getElementById("mic");
+
+
+let recognition = null;
+
+let listening = false;
+
+
+/* =================================
+   SPEAK
+================================= */
+
+function speak(text) {
+
+    // Stop anything currently speaking
+
+    window.speechSynthesis.cancel();
+
+
+    // Turn RED
+
+    app.classList.add("speaking");
+
+    status.textContent =
+        "AURA SPEAKING...";
+
+
+    const voice =
+        new SpeechSynthesisUtterance(text);
+
+
+    voice.lang = "en-US";
+
+    voice.rate = 0.9;
+
+    voice.pitch = 0.9;
+
+    voice.volume = 1.0;
+
+
+    voice.onend = function() {
+
+        app.classList.remove(
+            "speaking"
+        );
+
+        status.textContent =
+            "AURA SYSTEMS ONLINE";
+    };
+
+
+    voice.onerror = function() {
+
+        app.classList.remove(
+            "speaking"
+        );
+
+        status.textContent =
+            "VOICE ERROR";
+
+        heard.textContent =
+            "Try turning Silent Mode off.";
+    };
+
+
+    window.speechSynthesis.speak(
+        voice
+    );
+}
+
+
+/* =================================
+   AURA BRAIN
+================================= */
+
+function answer(command) {
+
+    command =
+        command.toLowerCase().trim();
+
+
+    /* Wake word */
+
+    if (
+        command === "aura" ||
+        command.includes(
+            "wake up aura"
+        )
+    ) {
+
+        return "Yes?";
+    }
+
+
+    /* Hello */
+
+    if (
+        command.includes("hello") ||
+        command.includes("hi")
+    ) {
+
+        return "Hello. AURA is online.";
+    }
+
+
+    /* Time */
+
+    if (
+        command.includes("time")
+    ) {
+
+        const time =
+            new Date().toLocaleTimeString(
+                [],
+                {
+                    hour: "numeric",
+                    minute: "2-digit"
+                }
+            );
+
+        return (
+            "The time is " +
+            time
+        );
+    }
+
+
+    /* Date */
+
+    if (
+        command.includes("date")
+    ) {
+
+        const date =
+            new Date().toLocaleDateString(
+                [],
+                {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric"
+                }
+            );
+
+        return (
+            "Today is " +
+            date
+        );
+    }
+
+
+    /* Identity */
+
+    if (
+        command.includes(
+            "who are you"
+        )
+    ) {
+
+        return (
+            "I am AURA. " +
+            "Augmented User Reality Assistant."
+        );
+    }
+
+
+    /* Status */
+
+    if (
+        command.includes("status")
+    ) {
+
+        return (
+            "All primary AURA " +
+            "systems are operational."
+        );
+    }
+
+
+    /* YouTube */
+
+    if (
+        command.includes(
+            "open youtube"
+        )
+    ) {
+
+        setTimeout(
+            function() {
+
+                window.location.href =
+                    "https://youtube.com";
+
+            },
+            1200
+        );
+
+        return "Opening YouTube.";
+    }
+
+
+    /* Google */
+
+    if (
+        command.includes(
+            "open google"
+        )
+    ) {
+
+        setTimeout(
+            function() {
+
+                window.location.href =
+                    "https://google.com";
+
+            },
+            1200
+        );
+
+        return "Opening Google.";
+    }
+
+
+    /* Unknown */
+
+    return (
+        "I heard you say " +
+        command
+    );
+}
+
+
+/* =================================
+   MICROPHONE
+================================= */
+
+function startListening() {
+
+    const SpeechRecognition =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+
+    if (!SpeechRecognition) {
+
+        status.textContent =
+            "VOICE NOT SUPPORTED";
+
+        status.classList.add(
+            "error"
+        );
+
+        heard.textContent =
+            "Try Safari on your iPhone.";
+
+        return;
+    }
+
+
+    recognition =
+        new SpeechRecognition();
+
+
+    recognition.lang =
+        "en-US";
+
+
+    recognition.continuous =
+        false;
+
+
+    recognition.interimResults =
+        false;
+
+
+    /* Started */
+
+    recognition.onstart =
+        function() {
+
+            listening = true;
+
+            app.classList.add(
+                "listening"
+            );
+
+            status.textContent =
+                "LISTENING...";
+
+            heard.textContent =
+                "I'm listening...";
+        };
+
+
+    /* Result */
+
+    recognition.onresult =
+        function(event) {
+
+            const text =
+                event
+                .results[0][0]
+                .transcript;
+
+
+            heard.textContent =
+                "You: " + text;
+
+
+            app.classList.remove(
+                "listening"
+            );
+
+
+            const response =
+                answer(text);
+
+
+            speak(response);
+        };
+
+
+    /* Error */
+
+    recognition.onerror =
+        function(event) {
+
+            listening = false;
+
+            app.classList.remove(
+                "listening"
+            );
+
+
+            status.textContent =
+                "MIC ERROR";
+
+
+            heard.textContent =
+                "Error: " +
+                event.error;
+
+
+            if (
+                event.error ===
+                "not-allowed"
+            ) {
+
+                heard.textContent =
+                    "Allow microphone access in Safari settings.";
+            }
+        };
+
+
+    /* Finished */
+
+    recognition.onend =
+        function() {
+
+            listening = false;
+
+            app.classList.remove(
+                "listening"
+            );
+
+        };
+
+
+    try {
+
+        recognition.start();
+
+    }
+
+    catch(error) {
+
+        status.textContent =
+            "START ERROR";
+
+        heard.textContent =
+            error.message;
+    }
+}
+
+
+/* =================================
+   BUTTON
+================================= */
+
+mic.addEventListener(
+    "click",
+    function() {
+
+        if (!listening) {
+
+            startListening();
+
+        }
+
+    }
+);
+
+</script>
+
+</body>
+</html>
